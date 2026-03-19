@@ -6,7 +6,5 @@ openai.api.key=ВАШ_OPENAI_КЛЮЧ
 bitrix24.webhook=https://???-??????.bitrix24.ru/rest/1/???_??????/
 telegram.chat.url=https://t.me/vzlet_agency
 serpapi.key=???_????_??_serpapi
-socks.proxy.host=127.0.0.1
-socks.proxy.port=10808
 telegram.bot.connection.timeout=60
 
