@@ -1,0 +1,21 @@
+spring.application.name=demo
+telegram.bot.token=ВАШ_ТОКЕН_БОТА
+openai.api.key=ВАШ_OPENAI_КЛЮЧ
+telegram.bot.username=vzletaudit_bot
+openai.api.key=ВАШ_OPENAI_КЛЮЧ
+bitrix24.webhook=https://???-??????.bitrix24.ru/rest/1/???_??????/
+telegram.chat.url=https://t.me/vzlet_agency
+serpapi.key=???_????_??_serpapi
+socks.proxy.host=127.0.0.1
+socks.proxy.port=10808
+telegram.bot.connection.timeout=60
+# PostgreSQL ???????????
+spring.datasource.url=jdbc:postgresql://localhost:5432/seobot
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA ?????????
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
