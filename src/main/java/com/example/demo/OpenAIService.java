@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.transport.ProxyProvider;
 
 import java.time.Duration;
 import java.util.List;
@@ -20,24 +19,12 @@ public class OpenAIService {
     private final WebClient webClient;
 
     public OpenAIService(
-            @Value("${openai.api.key}") String apiKey,
-            @Value("${socks.proxy.host:}") String proxyHost,
-            @Value("${socks.proxy.port:0}") int proxyPort) {
+            @Value("${openai.api.key}") String apiKey) {  // Убрали proxyHost и proxyPort
 
         this.apiKey = apiKey;
 
-        HttpClient httpClient = HttpClient.create();
-
-        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
-            httpClient = httpClient.proxy(proxySpec ->
-                    proxySpec.type(ProxyProvider.Proxy.SOCKS5)
-                            .host(proxyHost)
-                            .port(proxyPort)
-            );
-            System.out.println("🔌 Использую SOCKS5 прокси: " + proxyHost + ":" + proxyPort);
-        }
-
-        httpClient = httpClient.responseTimeout(Duration.ofSeconds(30));
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(30));
 
         this.webClient = WebClient.builder()
                 .clientConnector(new org.springframework.http.client.reactive.ReactorClientHttpConnector(httpClient))
