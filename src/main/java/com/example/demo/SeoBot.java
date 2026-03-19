@@ -44,9 +44,7 @@ public class SeoBot extends TelegramLongPollingBot {
     private final SeoScoreCalculator scoreCalculator;
     private final Bitrix24Service bitrix24Service;
     private final UserLimitService userLimitService;
-
     public SeoBot(
-            DefaultBotOptions options,
             @Value("${telegram.bot.token}") String botToken,
             @Value("${telegram.bot.username}") String botUsername,
             HtmlReportGenerator reportGenerator,
@@ -55,7 +53,7 @@ public class SeoBot extends TelegramLongPollingBot {
             Bitrix24Service bitrix24Service,
             UserLimitService userLimitService) {
 
-        super(options, botToken);
+        super(botToken);  // Вот это главное изменение - убрали options
         this.botUsername = botUsername;
         this.reportGenerator = reportGenerator;
         this.openAIService = openAIService;
@@ -63,7 +61,7 @@ public class SeoBot extends TelegramLongPollingBot {
         this.bitrix24Service = bitrix24Service;
         this.userLimitService = userLimitService;
 
-        System.out.println("✅ SeoBot инициализирован с прокси");
+        System.out.println("✅ SeoBot инициализирован");
         System.out.println("🛡️ Система ограничений и флуд-контроля активна");
     }
 
