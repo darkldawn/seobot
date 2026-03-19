@@ -31,9 +31,13 @@ public class HtmlReportGenerator {
         try (OutputStream os = new FileOutputStream(pdfFile)) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
 
-            File arialFont = new File("/System/Library/Fonts/Supplemental/Arial.ttf");
-            if (arialFont.exists()) {
-                builder.useFont(arialFont, "Arial");
+            // Загружаем шрифт из ресурсов
+            java.io.InputStream fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf");
+            if (fontStream != null) {
+                builder.useFont(() -> fontStream, "DejaVuSans");
+                System.out.println("✅ Шрифт DejaVuSans загружен из ресурсов");
+            } else {
+                System.out.println("⚠️ Шрифт не найден в ресурсах, будет использован шрифт по умолчанию");
             }
 
             builder.withFile(htmlFile);
@@ -53,7 +57,7 @@ public class HtmlReportGenerator {
         html.append("<meta charset=\"UTF-8\"/>\n");
         html.append("<title>SEO Отчет по сайту ").append(data.getDomain()).append("</title>\n");
         html.append("<style>\n");
-        html.append("body { font-family: Arial, sans-serif; margin: 40px; background: white; }\n");
+        html.append("body { font-family: 'DejaVuSans', Arial, sans-serif; margin: 40px; background: white;}");
         html.append("h1 { color: #000000; font-size: 32px; margin-bottom: 5px; }\n");
         html.append("h2 { color: #000000; font-size: 24px; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #FFC107; padding-bottom: 5px; }\n");
         html.append("h3 { color: #000000; font-size: 20px; margin-top: 25px; margin-bottom: 10px; }\n");
