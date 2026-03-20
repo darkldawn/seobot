@@ -322,18 +322,19 @@ public class SeoBot extends TelegramLongPollingBot {
                     boolean hasGeneralDirective = robotsText.contains("User-agent: *") || robotsText.contains("User-agent:*");
                     boolean hasSitemap = robotsText.contains("Sitemap:");
 
+                    // Используем StringBuilder для русских букв
                     StringBuilder analysis = new StringBuilder();
                     analysis.append("Ошибки в файле: ").append(hasErrors ? "есть" : "не найдены").append("\n");
                     analysis.append("Сайт доступен для индексации: ").append(siteAvailable ? "Да" : "Нет").append("\n");
                     analysis.append("Есть общая директива: ").append(hasGeneralDirective ? "Да" : "Нет").append("\n");
                     analysis.append("Указана карта сайта: ").append(hasSitemap ? "Да" : "Нет");
 
-                    robotsAnalysis = analysis.toString();
+                    // Принудительно конвертируем в UTF-8
+                    robotsAnalysis = new String(analysis.toString().getBytes("UTF-8"), "UTF-8");
                 }
             } catch (Exception e) {
                 System.out.println("⚠️ Не удалось проверить robots.txt: " + e.getMessage());
             }
-
             // Проверка sitemap.xml
             Boolean sitemapExists = false;
             try {

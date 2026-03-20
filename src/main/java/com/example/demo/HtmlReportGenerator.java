@@ -26,6 +26,7 @@ public class HtmlReportGenerator {
         File pdfFile = File.createTempFile("SEO_Report_" + domain, ".pdf");
 
         String htmlContent = generateHtml(data);
+        // Принудительно пишем в UTF-8
         Files.write(htmlFile.toPath(), htmlContent.getBytes("UTF-8"));
 
         try (OutputStream os = new FileOutputStream(pdfFile)) {
@@ -40,6 +41,7 @@ public class HtmlReportGenerator {
                 System.out.println("⚠️ Шрифт не найден в ресурсах, будет использован шрифт по умолчанию");
             }
 
+            // Указываем UTF-8
             builder.withFile(htmlFile);
             builder.toStream(os);
             builder.run();
@@ -73,6 +75,7 @@ public class HtmlReportGenerator {
         html.append(".warning { color: #FFC107; font-weight: bold; }\n");
         html.append(".error { color: #F44336; font-weight: bold; }\n");
         html.append(".info { color: #2196F3; font-weight: bold; }\n");
+        html.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         html.append(".duplicate-item { background-color: #ffebee; padding: 8px; margin: 5px 0; border-left: 4px solid #F44336; }\n");
         html.append(".analysis-pre { background-color: #f5f5f5; padding: 10px; border-radius: 5px; white-space: pre-wrap; font-family: Arial, sans-serif; }\n");
         html.append("</style>\n");
