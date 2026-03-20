@@ -33,7 +33,7 @@ public class HtmlReportGenerator {
             PdfRendererBuilder builder = new PdfRendererBuilder();
 
             // Загружаем шрифт из ресурсов
-            java.io.InputStream fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf");
+            java.io.InputStream fontStream = getClass().getResourceAsStream("src/main/resources/fonts/DejaVuSans.ttf");
             if (fontStream != null) {
                 builder.useFont(() -> fontStream, "DejaVuSans");
                 System.out.println("✅ Шрифт DejaVuSans загружен из ресурсов");
