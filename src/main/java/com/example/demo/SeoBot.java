@@ -304,8 +304,9 @@ public class SeoBot extends TelegramLongPollingBot {
             String domain = extractDomain(url);
 
             // Проверка robots.txt
+            // Проверка robots.txt
             Boolean robotsExists = false;
-            String robotsAnalysis = "❌ robots.txt не найден";
+            String robotsAnalysis = "❌ robots.txt not found"; // English
             try {
                 String robotsUrl = domain.startsWith("http") ? domain + "/robots.txt" : "https://" + domain + "/robots.txt";
                 org.jsoup.Connection.Response robotsResponse = Jsoup.connect(robotsUrl)
@@ -322,18 +323,16 @@ public class SeoBot extends TelegramLongPollingBot {
                     boolean hasGeneralDirective = robotsText.contains("User-agent: *") || robotsText.contains("User-agent:*");
                     boolean hasSitemap = robotsText.contains("Sitemap:");
 
-                    // Используем StringBuilder для русских букв
                     StringBuilder analysis = new StringBuilder();
-                    analysis.append("Ошибки в файле: ").append(hasErrors ? "есть" : "не найдены").append("\n");
-                    analysis.append("Сайт доступен для индексации: ").append(siteAvailable ? "Да" : "Нет").append("\n");
-                    analysis.append("Есть общая директива: ").append(hasGeneralDirective ? "Да" : "Нет").append("\n");
-                    analysis.append("Указана карта сайта: ").append(hasSitemap ? "Да" : "Нет");
+                    analysis.append("Errors in file: ").append(hasErrors ? "yes" : "no").append("\n");
+                    analysis.append("Site available for indexing: ").append(siteAvailable ? "Yes" : "No").append("\n");
+                    analysis.append("Has general directive: ").append(hasGeneralDirective ? "Yes" : "No").append("\n");
+                    analysis.append("Has sitemap: ").append(hasSitemap ? "Yes" : "No");
 
-                    // Принудительно конвертируем в UTF-8
-                    robotsAnalysis = new String(analysis.toString().getBytes("UTF-8"), "UTF-8");
+                    robotsAnalysis = analysis.toString();
                 }
             } catch (Exception e) {
-                System.out.println("⚠️ Не удалось проверить robots.txt: " + e.getMessage());
+                System.out.println("⚠️ Failed to check robots.txt: " + e.getMessage());
             }
             // Проверка sitemap.xml
             Boolean sitemapExists = false;
