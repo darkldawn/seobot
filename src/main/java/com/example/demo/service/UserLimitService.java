@@ -212,7 +212,7 @@ public class UserLimitService {
             return String.format(
                     "⏳ У вас осталось %d из %d бесплатных проверок на этой неделе.\n" +
                             "Следующий сброс лимита: %s (через %d дней)\n\n" +
-                            "👑 Хотите снять ограничения? Напишите @darkldawn\n\n" +
+                            "👑 Хотите снять ограничения? Напишите https://t.me/vzlet_agency\n\n" +
                             "⚠️ Внимание: после 7 неудачных попыток вы будете заблокированы на 24 часа!",
                     checksLeft, MAX_CHECKS_PER_WEEK, nextResetDate, daysUntilReset
             );
