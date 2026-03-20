@@ -152,7 +152,7 @@ public class SeoBot extends TelegramLongPollingBot {
         }
 
         sendMessage(chatId, "⏳ Начинаю анализ сайта " + url + " для региона " + region + "...");
-        sendMessage(chatId, "Пока вы ждете, можете подписаться на наш телеграм канал: https://t.me/vzletagency");
+        sendMessage(chatId, "Пока вы ждете, можете подписаться на наш телеграм канал: https://t.me/+kxLmLd0HbGs0MTQy");
 
         String result = analyzeWebsite(url, chatId, region, username);
 
