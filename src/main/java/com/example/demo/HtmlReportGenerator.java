@@ -75,7 +75,6 @@ public class HtmlReportGenerator {
         html.append(".warning { color: #FFC107; font-weight: bold; }\n");
         html.append(".error { color: #F44336; font-weight: bold; }\n");
         html.append(".info { color: #2196F3; font-weight: bold; }\n");
-        html.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         html.append(".duplicate-item { background-color: #ffebee; padding: 8px; margin: 5px 0; border-left: 4px solid #F44336; }\n");
         html.append(".analysis-pre { background-color: #f5f5f5; padding: 10px; border-radius: 5px; white-space: pre-wrap; font-family: Arial, sans-serif; }\n");
         html.append("</style>\n");
