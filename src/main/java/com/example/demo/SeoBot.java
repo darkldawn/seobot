@@ -30,7 +30,6 @@ import java.util.Random;
 import java.util.HashSet;
 import java.util.Set;
 
-// Импорт для сервиса ограничений
 import com.example.demo.service.UserLimitService;
 
 @Component
@@ -44,7 +43,9 @@ public class SeoBot extends TelegramLongPollingBot {
     private final SeoScoreCalculator scoreCalculator;
     private final Bitrix24Service bitrix24Service;
     private final UserLimitService userLimitService;
+
     public SeoBot(
+            DefaultBotOptions options,
             @Value("${telegram.bot.token}") String botToken,
             @Value("${telegram.bot.username}") String botUsername,
             HtmlReportGenerator reportGenerator,
@@ -53,7 +54,7 @@ public class SeoBot extends TelegramLongPollingBot {
             Bitrix24Service bitrix24Service,
             UserLimitService userLimitService) {
 
-        super(botToken);  // Вот это главное изменение - убрали options
+        super(options, botToken);
         this.botUsername = botUsername;
         this.reportGenerator = reportGenerator;
         this.openAIService = openAIService;
@@ -61,7 +62,7 @@ public class SeoBot extends TelegramLongPollingBot {
         this.bitrix24Service = bitrix24Service;
         this.userLimitService = userLimitService;
 
-        System.out.println("✅ SeoBot инициализирован");
+        System.out.println("✅ SeoBot инициализирован с прокси");
         System.out.println("🛡️ Система ограничений и флуд-контроля активна");
     }
 
@@ -82,7 +83,7 @@ public class SeoBot extends TelegramLongPollingBot {
 
         System.out.println("📩 Сообщение от " + chatId + " (@" + username + "): " + messageText);
 
-        // Команда /start - просто приветствие, без сброса состояния
+        // Команда /start - просто приветствие
         if (messageText.equals("/start")) {
             sendMessage(chatId, "🔍 Привет! Я бот для SEO-аудита.\n\nОтправь мне ссылку на сайт (например, https://example.com):");
             return;
@@ -151,8 +152,8 @@ public class SeoBot extends TelegramLongPollingBot {
             return;
         }
 
-        sendMessage(chatId, "⏳ Начинаю анализ сайта " + url + " для региона " + region + "...");
-        sendMessage(chatId, "Пока вы ждете, можете подписаться на наш телеграм канал: https://t.me/+kxLmLd0HbGs0MTQy");
+        // 🔥 УБРАНО: "⏳ Начинаю анализ сайта..." — оставляем только ссылку на канал
+        sendMessage(chatId, "Пока вы ждете, можете подписаться на наш телеграм канал: https://t.me/vzletagency");
 
         String result = analyzeWebsite(url, chatId, region, username);
 
@@ -180,8 +181,7 @@ public class SeoBot extends TelegramLongPollingBot {
         System.out.println("🔘 Нажата кнопка: " + callbackData + " от " + chatId);
 
         if (callbackData.startsWith("audit_")) {
-            // 🔥 ПРАВКА 1: Убираем создание лида в Битрикс24, просто отправляем сообщение
-            // bitrix24Service.createLead(domain, chatId, username, firstName);
+            // Убираем создание лида в Битрикс24, просто отправляем сообщение
             sendMessage(chatId, "✅ Спасибо! Сейчас я перекину вас в чат с нашими специалистами. Там уже будет готовый текст сообщения о заказе полного аудита, вам нужно просто его отправить.");
         }
     }
@@ -192,11 +192,11 @@ public class SeoBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        // 🔥 ПРАВКА 1: Оставляем только одну кнопку с ссылкой на чат и готовым текстом
+        // Одна кнопка с ссылкой на чат и готовым текстом
         InlineKeyboardButton auditButton = new InlineKeyboardButton();
         auditButton.setText("🔍 ЗАКАЗАТЬ ПОЛНЫЙ АУДИТ");
 
-        // 🔥 ИСПРАВЛЕНО: Правильное URL-кодирование
+        // Формируем ссылку с готовым сообщением
         String domain = extractDomain(url);
         String messageText = "Добрый день! Хотел бы заказать полный аудит моего сайта " + domain;
         String encodedText = encodeTelegramMessage(messageText);
@@ -205,7 +205,6 @@ public class SeoBot extends TelegramLongPollingBot {
         rows.add(Arrays.asList(auditButton));
         keyboard.setKeyboard(rows);
 
-        // 🔥 ПЕРЕИМЕНОВАЛ ПЕРЕМЕННУЮ С message НА replyMessage
         SendMessage replyMessage = new SendMessage();
         replyMessage.setChatId(chatId.toString());
         replyMessage.setText("✅ Отчет готов!\n\nХотите получить более детальный анализ? Закажите полный аудит у наших специалистов.");
@@ -218,7 +217,6 @@ public class SeoBot extends TelegramLongPollingBot {
         }
     }
 
-    // 🔥 НОВЫЙ МЕТОД ДЛЯ ПРАВИЛЬНОГО КОДИРОВАНИЯ
     private String encodeTelegramMessage(String text) {
         try {
             return URLEncoder.encode(text, StandardCharsets.UTF_8.toString())
@@ -231,7 +229,8 @@ public class SeoBot extends TelegramLongPollingBot {
 
     private String analyzeWebsite(String url, Long chatId, String region, String username) {
         try {
-            sendMessage(chatId, "🌐 Загружаю сайт...");
+            // 🔥 УБРАНО: "🌐 Загружаю сайт..." — убираем, чтобы не спамить
+            // sendMessage(chatId, "🌐 Загружаю сайт...");
 
             long startTime = System.currentTimeMillis();
 
@@ -260,6 +259,7 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println("  H1: " + h1Count);
             System.out.println("  Изображения без alt: " + imagesWithoutAlt);
 
+            // 🔥 ОСТАВЛЯЕМ: только одно сообщение об анализе
             sendMessage(chatId, "🤖 Анализирую контент...");
 
             String siteText = doc.text();
@@ -269,7 +269,8 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println(aiAnalysis);
             System.out.println("===== AI ANALYSIS END =====");
 
-            sendMessage(chatId, "🔑 Генерирую ключевые запросы для " + region + "...");
+            // 🔥 УБРАНО: "🔑 Генерирую ключевые запросы..." — убираем, чтобы не спамить
+            // sendMessage(chatId, "🔑 Генерирую ключевые запросы для " + region + "...");
 
             String niche = openAIService.detectNiche(siteText);
             List<String> keywords = openAIService.generateKeywords(siteText, niche, region);
@@ -282,7 +283,8 @@ public class SeoBot extends TelegramLongPollingBot {
             }
             System.out.println("===== KEYWORDS END =====");
 
-            sendMessage(chatId, "📊 Подготавливаю данные о позициях...");
+            // 🔥 УБРАНО: "📊 Подготавливаю данные о позициях..." — убираем
+            // sendMessage(chatId, "📊 Подготавливаю данные о позициях...");
 
             List<ReportData.PositionData> positions = new ArrayList<>();
             if (keywords != null && keywords.size() >= 5) {
@@ -294,19 +296,19 @@ public class SeoBot extends TelegramLongPollingBot {
                 }
             }
 
-            sendMessage(chatId, "📈 Рассчитываю SEO-потенциал...");
+            // 🔥 УБРАНО: "📈 Рассчитываю SEO-потенциал..." — убираем
+            // sendMessage(chatId, "📈 Рассчитываю SEO-потенциал...");
 
             ReportData.SeoScore scores = scoreCalculator.calculate(doc, siteText, positions);
 
             String finalComment = "SEO — это марафон, а не спринт, но у вашего сайта хороший старт.";
 
-            // 🔥 СБОР ТЕХНИЧЕСКИХ ДАННЫХ
+            // СБОР ТЕХНИЧЕСКИХ ДАННЫХ
             String domain = extractDomain(url);
 
             // Проверка robots.txt
-            // Проверка robots.txt
             Boolean robotsExists = false;
-            String robotsAnalysis = "❌ robots.txt not found"; // English
+            String robotsAnalysis = "❌ robots.txt не найден";
             try {
                 String robotsUrl = domain.startsWith("http") ? domain + "/robots.txt" : "https://" + domain + "/robots.txt";
                 org.jsoup.Connection.Response robotsResponse = Jsoup.connect(robotsUrl)
@@ -317,23 +319,23 @@ public class SeoBot extends TelegramLongPollingBot {
                 if (robotsExists) {
                     String robotsText = robotsResponse.body();
 
-                    // Анализ robots.txt
                     boolean hasErrors = false;
                     boolean siteAvailable = !robotsText.contains("Disallow: /");
                     boolean hasGeneralDirective = robotsText.contains("User-agent: *") || robotsText.contains("User-agent:*");
                     boolean hasSitemap = robotsText.contains("Sitemap:");
 
                     StringBuilder analysis = new StringBuilder();
-                    analysis.append("Errors in file: ").append(hasErrors ? "yes" : "no").append("\n");
-                    analysis.append("Site available for indexing: ").append(siteAvailable ? "Yes" : "No").append("\n");
-                    analysis.append("Has general directive: ").append(hasGeneralDirective ? "Yes" : "No").append("\n");
-                    analysis.append("Has sitemap: ").append(hasSitemap ? "Yes" : "No");
+                    analysis.append("Ошибки в файле: ").append(hasErrors ? "есть" : "не найдены").append("\n");
+                    analysis.append("Сайт доступен для индексации: ").append(siteAvailable ? "Да" : "Нет").append("\n");
+                    analysis.append("Есть общая директива: ").append(hasGeneralDirective ? "Да" : "Нет").append("\n");
+                    analysis.append("Указана карта сайта: ").append(hasSitemap ? "Да" : "Нет");
 
                     robotsAnalysis = analysis.toString();
                 }
             } catch (Exception e) {
-                System.out.println("⚠️ Failed to check robots.txt: " + e.getMessage());
+                System.out.println("⚠️ Не удалось проверить robots.txt: " + e.getMessage());
             }
+
             // Проверка sitemap.xml
             Boolean sitemapExists = false;
             try {
@@ -367,7 +369,6 @@ public class SeoBot extends TelegramLongPollingBot {
             reportData.setImagesWithoutAlt(imagesWithoutAlt);
             reportData.setLoadTime(loadTime);
 
-            // Устанавливаем новые технические данные
             reportData.setRobotsExists(robotsExists);
             reportData.setRobotsAnalysis(robotsAnalysis);
             reportData.setSitemapExists(sitemapExists);
@@ -377,6 +378,7 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println("✅ ReportData создан:");
             System.out.println("  robots.txt анализ: " + robotsAnalysis);
 
+            // 🔥 ОСТАВЛЯЕМ: только сообщение о формировании PDF
             sendMessage(chatId, "📄 Формирую PDF отчёт...");
             File reportFile = reportGenerator.generatePdfReport(reportData);
 
