@@ -307,8 +307,9 @@ public class SeoBot extends TelegramLongPollingBot {
             String domain = extractDomain(url);
 
             // Проверка robots.txt
+            // Проверка robots.txt
             Boolean robotsExists = false;
-            String robotsAnalysis = "❌ robots.txt не найден";
+            String robotsAnalysis = "❌ robots.txt not found";
             try {
                 String robotsUrl = domain.startsWith("http") ? domain + "/robots.txt" : "https://" + domain + "/robots.txt";
                 org.jsoup.Connection.Response robotsResponse = Jsoup.connect(robotsUrl)
@@ -325,15 +326,15 @@ public class SeoBot extends TelegramLongPollingBot {
                     boolean hasSitemap = robotsText.contains("Sitemap:");
 
                     StringBuilder analysis = new StringBuilder();
-                    analysis.append("Ошибки в файле: ").append(hasErrors ? "есть" : "не найдены").append("\n");
-                    analysis.append("Сайт доступен для индексации: ").append(siteAvailable ? "Да" : "Нет").append("\n");
-                    analysis.append("Есть общая директива: ").append(hasGeneralDirective ? "Да" : "Нет").append("\n");
-                    analysis.append("Указана карта сайта: ").append(hasSitemap ? "Да" : "Нет");
+                    analysis.append("Errors in file: ").append(hasErrors ? "yes" : "no").append("\n");
+                    analysis.append("Site available for indexing: ").append(siteAvailable ? "Yes" : "No").append("\n");
+                    analysis.append("General directive present: ").append(hasGeneralDirective ? "Yes" : "No").append("\n");
+                    analysis.append("Sitemap specified: ").append(hasSitemap ? "Yes" : "No");
 
                     robotsAnalysis = analysis.toString();
                 }
             } catch (Exception e) {
-                System.out.println("⚠️ Не удалось проверить robots.txt: " + e.getMessage());
+                System.out.println("⚠️ Failed to check robots.txt: " + e.getMessage());
             }
 
             // Проверка sitemap.xml
