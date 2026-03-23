@@ -167,7 +167,7 @@ public class HtmlReportGenerator {
         // 7. ТЕХНИЧЕСКИЙ АУДИТ (РАСШИРЕННЫЙ)
         html.append("<h2>Технический аудит</h2>\n");
 
-        // Основные метрики
+// Основные метрики
         html.append("<table>\n");
         html.append("<tr><th>Параметр</th><th>Оценка</th></tr>\n");
         html.append("<tr><td>Title</td><td>").append(data.getTitleLength()).append(" символов</td></tr>\n");
@@ -177,55 +177,60 @@ public class HtmlReportGenerator {
         html.append("<tr><td>Скорость загрузки</td><td>").append(String.format("%.1f", data.getLoadTime()/1000.0)).append(" с</td></tr>\n");
         html.append("</table>\n");
 
-        // Оценка Title от AI
+// Оценка Title от AI
         String titleEval = sections.get("ОЦЕНКА TITLE");
         if (titleEval != null && !titleEval.trim().isEmpty()) {
             html.append("<h3>Анализ Title</h3>\n");
-            html.append("<p>").append(titleEval.replace("\n", " ")).append("</p>\n");
+            String safeTitle = titleEval.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+            html.append("<p>").append(safeTitle.replace("\n", "<br/>")).append("</p>\n");
         }
 
-        // Оценка Description от AI
+// Оценка Description от AI
         String descEval = sections.get("ОЦЕНКА DESCRIPTION");
         if (descEval != null && !descEval.trim().isEmpty()) {
             html.append("<h3>Анализ Description</h3>\n");
-            html.append("<p>").append(descEval.replace("\n", " ")).append("</p>\n");
+            String safeDesc = descEval.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+            html.append("<p>").append(safeDesc.replace("\n", "<br/>")).append("</p>\n");
         }
 
-        // Проверка robots.txt
+// 🔥 ИСПРАВЛЕННЫЙ БЛОК robots.txt
         html.append("<h3>robots.txt</h3>\n");
         if (data.getRobotsAnalysis() != null && !data.getRobotsAnalysis().isEmpty()) {
-            html.append("<div class=\"analysis-pre\">").append(data.getRobotsAnalysis().replace("\n", "<br/>")).append("</div>\n");
+            String safeRobots = data.getRobotsAnalysis()
+                    .replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\n", "<br/>");
+            html.append("<div class=\"analysis-pre\">").append(safeRobots).append("</div>\n");
         } else if (data.getRobotsExists() != null && data.getRobotsExists()) {
             html.append("<p class=\"success\">✅ robots.txt найден</p>\n");
         } else {
             html.append("<p class=\"error\">❌ robots.txt отсутствует</p>\n");
         }
 
-
-        // Мобильная адаптация
-        html.append("<h3>Мобильная адаптация</h3>\n");
-        if (data.getMobileFriendly() != null && data.getMobileFriendly()) {
-            html.append("<p class=\"success\"> Сайт адаптирован для мобильных устройств</p>\n");
+// Проверка sitemap.xml
+        html.append("<h3>sitemap.xml</h3>\n");
+        if (data.getSitemapExists() != null && data.getSitemapExists()) {
+            html.append("<p class=\"success\">✅ sitemap.xml найден</p>\n");
         } else {
-            html.append("<p class=\"error\"> Сайт не оптимизирован для мобильных</p>\n");
+            html.append("<p class=\"error\">❌ sitemap.xml отсутствует</p>\n");
         }
 
-        // Дубли метатегов
+// Мобильная адаптация
+        html.append("<h3>Мобильная адаптация</h3>\n");
+        if (data.getMobileFriendly() != null && data.getMobileFriendly()) {
+            html.append("<p class=\"success\">✅ Сайт адаптирован для мобильных устройств</p>\n");
+        } else {
+            html.append("<p class=\"error\">❌ Сайт не оптимизирован для мобильных</p>\n");
+        }
+
+// Дубли метатегов
         if (data.getDuplicateTitles() != null && !data.getDuplicateTitles().isEmpty()) {
             html.append("<h3>Дубликаты Title</h3>\n");
             for (Map.Entry<String, List<String>> entry : data.getDuplicateTitles().entrySet()) {
+                String safeTitle = entry.getKey().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                 html.append("<div class=\"duplicate-item\">\n");
-                html.append("<p><b>Title:</b> ").append(entry.getKey()).append("</p>\n");
-                html.append("<p><b>Страницы:</b> ").append(String.join(", ", entry.getValue())).append("</p>\n");
-                html.append("</div>\n");
-            }
-        }
-
-        if (data.getDuplicateDescriptions() != null && !data.getDuplicateDescriptions().isEmpty()) {
-            html.append("<h3>Дубликаты Description</h3>\n");
-            for (Map.Entry<String, List<String>> entry : data.getDuplicateDescriptions().entrySet()) {
-                html.append("<div class=\"duplicate-item\">\n");
-                html.append("<p><b>Description:</b> ").append(entry.getKey()).append("</p>\n");
+                html.append("<p><b>Title:</b> ").append(safeTitle).append("</p>\n");
                 html.append("<p><b>Страницы:</b> ").append(String.join(", ", entry.getValue())).append("</p>\n");
                 html.append("</div>\n");
             }
