@@ -13,12 +13,7 @@ public class TelegramBotConfig {
     @Bean
     public DefaultBotOptions defaultBotOptions() {
         DefaultBotOptions options = new DefaultBotOptions();
-
-        // Если нужен прокси для Telegram API, раскомментируйте:
-        // options.setProxyHost("127.0.0.1");
-        // options.setProxyPort(10808);
-        // options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
-
+        // Прокси не нужен, оставляем пустым
         System.out.println("✅ DefaultBotOptions создан");
         return options;
     }

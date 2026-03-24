@@ -2,7 +2,6 @@ package com.example.demo;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
@@ -27,8 +26,6 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.example.demo.service.UserLimitService;
 
@@ -83,44 +80,99 @@ public class SeoBot extends TelegramLongPollingBot {
 
         System.out.println("📩 Сообщение от " + chatId + " (@" + username + "): " + messageText);
 
-        // Команда /start - просто приветствие
         if (messageText.equals("/start")) {
-            sendMessage(chatId, "🔍 Привет! Я бот для SEO-аудита.\n\nОтправь мне ссылку на сайт (например, https://example.com):");
+            sendMessage(chatId, "🔍 Привет! Я бот для SEO-аудита.\n\nОтправь мне ссылку на сайт (например, example.com или https://example.com):");
             return;
         }
 
-        // Проверяем, не заблокирован ли пользователь
         if (!userLimitService.canUserCheck(chatId, username)) {
             String limitMessage = userLimitService.getLimitMessage(chatId);
             sendMessage(chatId, limitMessage);
 
             boolean blocked = userLimitService.registerFailedAttempt(chatId);
-
             if (blocked) {
                 sendMessage(chatId, "🚫 Вы заблокированы на 24 часа за слишком частые попытки.");
             }
             return;
         }
 
-        // Если пользователь прислал ссылку
-        if (messageText.startsWith("http://") || messageText.startsWith("https://")) {
+        // 🔥 ОБНОВЛЕННАЯ ПРОВЕРКА ССЫЛКИ: принимает любые форматы
+        if (isUrl(messageText)) {
             handleUrl(chatId, username, messageText);
             return;
         }
 
-        // Если пользователь прислал регион (есть сохраненный URL)
         String savedUrl = userUrl.get(chatId);
         if (savedUrl != null) {
             handleRegion(chatId, username, savedUrl, messageText);
             return;
         }
 
-        // Если ничего не подошло
-        sendMessage(chatId, "Отправьте ссылку на сайт для анализа (например, https://example.com)");
+        sendMessage(chatId, "Отправьте ссылку на сайт для анализа (например, example.com или https://example.com)");
+    }
+
+    /**
+     * Проверяет, похоже ли сообщение на URL (без протокола, с протоколом, с www, без www)
+     */
+    private boolean isUrl(String text) {
+        String trimmed = text.trim();
+
+        // С протоколом
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return true;
+        }
+
+        // Без протокола, но похоже на домен
+        // Регулярка: домен (буквы/цифры/дефис/точка) + точка + буквы (2+)
+        return trimmed.matches("^[a-zA-Z0-9][a-zA-Z0-9\\-\\.]*\\.[a-zA-Z]{2,}(/.*)?$");
+    }
+
+    /**
+     * Нормализует URL: добавляет https://, приводит к нижнему регистру, убирает лишнее
+     */
+    private String normalizeUrl(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            return null;
+        }
+
+        String url = input.trim();
+
+        // Удаляем лишние пробелы
+        url = url.replaceAll("\\s+", "");
+
+        // Удаляем слеш в конце
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+
+        // Приводим к нижнему регистру (только доменную часть, путь не трогаем)
+        String protocol = "";
+        String domainAndPath = url;
+
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            int protocolEnd = url.indexOf("://") + 3;
+            protocol = url.substring(0, protocolEnd);
+            domainAndPath = url.substring(protocolEnd);
+        }
+
+        // Приводим доменную часть к нижнему регистру
+        domainAndPath = domainAndPath.toLowerCase();
+        url = protocol + domainAndPath;
+
+        // Если нет протокола - добавляем https://
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://" + url;
+        }
+
+        // Проверяем, что получился корректный URL
+        if (url.length() < 10) {
+            return null;
+        }
+
+        return url;
     }
 
     private void handleUrl(Long chatId, String username, String url) {
-        // Проверяем ограничения
         if (!userLimitService.canUserCheck(chatId, username)) {
             String limitMessage = userLimitService.getLimitMessage(chatId);
             sendMessage(chatId, limitMessage);
@@ -132,13 +184,19 @@ public class SeoBot extends TelegramLongPollingBot {
             return;
         }
 
-        // Сохраняем URL и запрашиваем регион
-        userUrl.put(chatId, url);
+        // 🔥 НОРМАЛИЗУЕМ URL
+        String normalizedUrl = normalizeUrl(url);
+
+        if (normalizedUrl == null) {
+            sendMessage(chatId, "❌ Не удалось распознать ссылку. Убедитесь, что вы отправили корректный адрес сайта (например, example.com или https://example.com)");
+            return;
+        }
+
+        userUrl.put(chatId, normalizedUrl);
         sendMessage(chatId, "📍 Укажите регион продвижения (например: Москва, Санкт-Петербург, Россия):");
     }
 
     private void handleRegion(Long chatId, String username, String url, String region) {
-        // Проверяем ограничения еще раз
         if (!userLimitService.canUserCheck(chatId, username)) {
             String limitMessage = userLimitService.getLimitMessage(chatId);
             sendMessage(chatId, limitMessage);
@@ -152,7 +210,6 @@ public class SeoBot extends TelegramLongPollingBot {
             return;
         }
 
-        // 🔥 УБРАНО: "⏳ Начинаю анализ сайта..." — оставляем только ссылку на канал
         sendMessage(chatId, "Пока вы ждете, можете подписаться на наш телеграм канал: https://t.me/vzletagency");
 
         String result = analyzeWebsite(url, chatId, region, username);
@@ -164,7 +221,6 @@ public class SeoBot extends TelegramLongPollingBot {
             File reportFile = new File(filePath);
             sendReportWithButtons(chatId, reportFile, url, region);
 
-            // НЕ УДАЛЯЕМ userUrl, оставляем пользователя в режиме ожидания
             sendMessage(chatId, "📨 Отправьте следующий сайт для анализа или /start для справки");
         } else {
             sendMessage(chatId, "❌ Ошибка: " + result.substring(6));
@@ -181,7 +237,6 @@ public class SeoBot extends TelegramLongPollingBot {
         System.out.println("🔘 Нажата кнопка: " + callbackData + " от " + chatId);
 
         if (callbackData.startsWith("audit_")) {
-            // Убираем создание лида в Битрикс24, просто отправляем сообщение
             sendMessage(chatId, "✅ Спасибо! Сейчас я перекину вас в чат с нашими специалистами. Там уже будет готовый текст сообщения о заказе полного аудита, вам нужно просто его отправить.");
         }
     }
@@ -192,11 +247,9 @@ public class SeoBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        // Одна кнопка с ссылкой на чат и готовым текстом
         InlineKeyboardButton auditButton = new InlineKeyboardButton();
         auditButton.setText("🔍 ЗАКАЗАТЬ ПОЛНЫЙ АУДИТ");
 
-        // Формируем ссылку с готовым сообщением
         String domain = extractDomain(url);
         String messageText = "Добрый день! Хотел бы заказать полный аудит моего сайта " + domain;
         String encodedText = encodeTelegramMessage(messageText);
@@ -229,9 +282,6 @@ public class SeoBot extends TelegramLongPollingBot {
 
     private String analyzeWebsite(String url, Long chatId, String region, String username) {
         try {
-            // 🔥 УБРАНО: "🌐 Загружаю сайт..." — убираем, чтобы не спамить
-            // sendMessage(chatId, "🌐 Загружаю сайт...");
-
             long startTime = System.currentTimeMillis();
 
             org.jsoup.Connection.Response response = Jsoup.connect(url)
@@ -259,7 +309,6 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println("  H1: " + h1Count);
             System.out.println("  Изображения без alt: " + imagesWithoutAlt);
 
-            // 🔥 ОСТАВЛЯЕМ: только одно сообщение об анализе
             sendMessage(chatId, "🤖 Анализирую контент...");
 
             String siteText = doc.text();
@@ -268,9 +317,6 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println("===== AI ANALYSIS START =====");
             System.out.println(aiAnalysis);
             System.out.println("===== AI ANALYSIS END =====");
-
-            // 🔥 УБРАНО: "🔑 Генерирую ключевые запросы..." — убираем, чтобы не спамить
-            // sendMessage(chatId, "🔑 Генерирую ключевые запросы для " + region + "...");
 
             String niche = openAIService.detectNiche(siteText);
             List<String> keywords = openAIService.generateKeywords(siteText, niche, region);
@@ -283,9 +329,6 @@ public class SeoBot extends TelegramLongPollingBot {
             }
             System.out.println("===== KEYWORDS END =====");
 
-            // 🔥 УБРАНО: "📊 Подготавливаю данные о позициях..." — убираем
-            // sendMessage(chatId, "📊 Подготавливаю данные о позициях...");
-
             List<ReportData.PositionData> positions = new ArrayList<>();
             if (keywords != null && keywords.size() >= 5) {
                 List<String> topKeywords = keywords.subList(0, 5);
@@ -296,18 +339,12 @@ public class SeoBot extends TelegramLongPollingBot {
                 }
             }
 
-            // 🔥 УБРАНО: "📈 Рассчитываю SEO-потенциал..." — убираем
-            // sendMessage(chatId, "📈 Рассчитываю SEO-потенциал...");
-
             ReportData.SeoScore scores = scoreCalculator.calculate(doc, siteText, positions);
-
             String finalComment = "SEO — это марафон, а не спринт, но у вашего сайта хороший старт.";
 
-            // СБОР ТЕХНИЧЕСКИХ ДАННЫХ
             String domain = extractDomain(url);
 
-            // Проверка robots.txt
-            // Проверка robots.txt
+            // Проверка robots.txt (только английские буквы!)
             Boolean robotsExists = false;
             String robotsAnalysis = "❌ robots.txt not found";
             try {
@@ -347,10 +384,10 @@ public class SeoBot extends TelegramLongPollingBot {
                         .execute();
                 sitemapExists = sitemapResponse.statusCode() == 200;
             } catch (Exception e) {
-                System.out.println("⚠️ Не удалось проверить sitemap.xml: " + e.getMessage());
+                System.out.println("⚠️ Failed to check sitemap.xml: " + e.getMessage());
             }
 
-            // Проверка мобильной адаптации (наличие viewport)
+            // Проверка мобильной адаптации
             boolean hasViewport = doc.select("meta[name=viewport]").size() > 0;
             boolean mobileFriendly = hasViewport;
 
@@ -379,7 +416,6 @@ public class SeoBot extends TelegramLongPollingBot {
             System.out.println("✅ ReportData создан:");
             System.out.println("  robots.txt анализ: " + robotsAnalysis);
 
-            // 🔥 ОСТАВЛЯЕМ: только сообщение о формировании PDF
             sendMessage(chatId, "📄 Формирую PDF отчёт...");
             File reportFile = reportGenerator.generatePdfReport(reportData);
 
@@ -416,10 +452,14 @@ public class SeoBot extends TelegramLongPollingBot {
     }
 
     private String extractDomain(String url) {
-        return url.replace("https://", "")
+        String domain = url.replace("https://", "")
                 .replace("http://", "")
-                .replace("www.", "")
-                .split("/")[0];
+                .replace("www.", "");
+        int slashIndex = domain.indexOf("/");
+        if (slashIndex > 0) {
+            domain = domain.substring(0, slashIndex);
+        }
+        return domain;
     }
 
     @Override
